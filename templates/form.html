@@ -1,33 +1,64 @@
 {% extends 'base.html' %}
+
+{% block title %}{{ 'Modifier' if serie else 'Ajouter' }} — BD4TVShow{% endblock %}
+
 {% block content %}
-<h2>{{ 'Modifier' if serie else 'Ajouter' }} une série</h2>
-<form method="post">
-    <div class="mb-3">
-        <label>Titre</label>
-        <input type="text" name="titre" class="form-control" value="{{ serie.titre if serie else '' }}" required>
-    </div>
-    <div class="mb-3">
-        <label>Année début</label>
-        <input type="number" name="annee_debut" class="form-control" value="{{ serie.annee_debut if serie else '' }}">
-    </div>
-    <div class="mb-3">
-        <label>Année fin</label>
-        <input type="number" name="annee_fin" class="form-control" value="{{ serie.annee_fin if serie else '' }}">
-    </div>
-    <div class="mb-3">
-        <label>Note</label>
-        <input type="number" step="0.1" name="note" class="form-control" value="{{ serie.note if serie else '' }}">
-    </div>
-    <div class="mb-3">
-        <label>Genre</label>
-        <select name="genre_id" class="form-select">
-            <option value="">-- Choisir --</option>
-            {% for g in genres %}
-            <option value="{{ g.id }}" {% if serie and serie.genre_id == g.id %}selected{% endif %}>{{ g.nom }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <button class="btn btn-success">Enregistrer</button>
-    <a href="/" class="btn btn-secondary">Annuler</a>
-</form>
+
+<h2>{{ '✏️ Modifier' if serie else '➕ Ajouter' }} une série</h2>
+
+<div class="card" style="max-width: 640px; margin: 0 auto;">
+    <form method="post">
+
+        <div class="mb-3">
+            <label>Titre *</label>
+            <input type="text" name="titre" class="form-control"
+                   value="{{ serie.titre if serie else '' }}"
+                   placeholder="Ex : Breaking Bad" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="mb-3">
+                <label>Année début</label>
+                <input type="number" name="annee_debut" class="form-control"
+                       value="{{ serie.annee_debut if serie else '' }}"
+                       placeholder="2008" min="1900" max="2100">
+            </div>
+            <div class="mb-3">
+                <label>Année fin</label>
+                <input type="number" name="annee_fin" class="form-control"
+                       value="{{ serie.annee_fin if serie else '' }}"
+                       placeholder="2013" min="1900" max="2100">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="mb-3">
+                <label>Note (0-10)</label>
+                <input type="number" step="0.1" name="note" class="form-control"
+                       value="{{ serie.note if serie else '' }}"
+                       placeholder="9.5" min="0" max="10">
+            </div>
+            <div class="mb-3">
+                <label>Genre</label>
+                <select name="genre_id" class="form-select">
+                    <option value="">— Choisir —</option>
+                    {% for g in genres %}
+                    <option value="{{ g.id }}" {% if serie and serie.genre_id == g.id %}selected{% endif %}>
+                        {{ g.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button class="btn btn-success" type="submit">
+                {{ '💾 Enregistrer' if serie else '➕ Ajouter' }}
+            </button>
+            <a href="/" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+
 {% endblock %}
