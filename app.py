@@ -149,7 +149,30 @@ def init_db():
     db.create_all()
     print("Base initialisée.")
 
+# ---------- ROUTE TEMPORAIRE D'INITIALISATION ----------
+@app.route('/init')
+def init_route():
+    try:
+        db.create_all()
 
+        if not Genre.query.first():
+            db.session.add_all([
+                Genre(nom='Drame'),
+                Genre(nom='Fantastique'),
+                Genre(nom='Comedie')
+            ])
+            db.session.commit()
+
+        if not Serie.query.first():
+            db.session.add_all([
+                Serie(titre='Breaking Bad', annee_debut=2008, annee_fin=2013, note=9.5, genre_id=1),
+                Serie(titre='Game of Thrones', annee_debut=2011, annee_fin=2019, note=9.3, genre_id=2)
+            ])
+            db.session.commit()
+
+        return "Base initialisee OK"
+    except Exception as e:
+        return f"Erreur : {str(e)}"
 # ---------- LANCEMENT ----------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
