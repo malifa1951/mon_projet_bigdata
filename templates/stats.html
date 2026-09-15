@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Statistiques</h2>
+<p><em>Temps d'exécution total : {{ duree }} ms</em></p>
+
+<h4>Top 5 séries les mieux notées</h4>
+<ul class="list-group mb-3">
+    {% for t, n in top_series %}
+        <li class="list-group-item">{{ t }} — {{ n }}</li>
+    {% endfor %}
+</ul>
+
+<h4>Nombre de séries par genre</h4>
+<ul class="list-group mb-3">
+    {% for g, c in par_genre %}
+        <li class="list-group-item">{{ g }} : {{ c }}</li>
+    {% endfor %}
+</ul>
+
+<h4>Séries avec plus de 3 saisons</h4>
+<ul class="list-group mb-3">
+    {% for t, c in longues %}
+        <li class="list-group-item">{{ t }} — {{ c }} saisons</li>
+    {% endfor %}
+</ul>
+
+<h4>Acteurs et rôles</h4>
+<ul class="list-group mb-3">
+    {% for n, p, r, t in roles %}
+        <li class="list-group-item">{{ p }} {{ n }} joue {{ r }} dans {{ t }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,31 @@
+
+
+services:
+  db:
+    image: postgres:15
+    container_name: tvshow_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tvshowdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    container_name: tvshow_web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/tvshowdb
+      SECRET_KEY: super_secret_key
+      FLASK_APP: app.py
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Liste des séries</h2>
+
+<form action="/import" method="post" enctype="multipart/form-data" class="mb-3">
+    <div class="input-group">
+        <input type="file" name="file" class="form-control" accept=".csv" required>
+        <button class="btn btn-primary" type="submit">Importer CSV</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th><th>Titre</th><th>Début</th><th>Fin</th><th>Note</th><th>Genre</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in series %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td>{{ s.titre }}</td>
+            <td>{{ s.annee_debut }}</td>
+            <td>{{ s.annee_fin }}</td>
+            <td>{{ s.note }}</td>
+            <td>{{ s.genre.nom if s.genre else '-' }}</td>
+            <td>
+                <a href="/edit/{{ s.id }}" class="btn btn-sm btn-warning">Modifier</a>
+                <form action="/delete/{{ s.id }}" method="post" style="display:inline;">
+                    <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
