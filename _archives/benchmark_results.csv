@@ -1,0 +1,8 @@
+Requête,Temps moyen (ms),Nb séries
+select_all,322.39,20002
+order_by,442.0,20002
+filter_note,125.1,20002
+count,1.91,20002
+group_by,15.65,20002
+join,22.3,20002
+top10,6.1,20002

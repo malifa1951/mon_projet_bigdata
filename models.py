@@ -11,11 +11,11 @@ class Genre(db.Model):
 class Serie(db.Model):
     __tablename__ = 'serie'
     id = db.Column(db.Integer, primary_key=True)
-    titre = db.Column(db.String(150), nullable=False)
-    annee_debut = db.Column(db.Integer)
+    titre = db.Column(db.String(150), nullable=False, index=True)
+    annee_debut = db.Column(db.Integer, index=True)
     annee_fin = db.Column(db.Integer)
-    note = db.Column(db.Float)
-    genre_id = db.Column(db.Integer, db.ForeignKey('genre.id'))
+    note = db.Column(db.Float, index=True)
+    genre_id = db.Column(db.Integer, db.ForeignKey('genre.id'), index=True)
     saisons = db.relationship('Saison', backref='serie', lazy=True, cascade="all, delete-orphan")
     roles = db.relationship('Role', backref='serie', lazy=True, cascade="all, delete-orphan")
 

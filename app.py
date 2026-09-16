@@ -72,14 +72,26 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    series = Serie.query.order_by(Serie.titre).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 25  # 25 séries par page
+
+    pagination = Serie.query.order_by(Serie.titre).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    series = pagination.items
     genres = Genre.query.all()
     stats = {
         'total_series': Serie.query.count(),
         'total_genres': Genre.query.count(),
         'avg_note': round(db.session.query(db.func.avg(Serie.note)).scalar() or 0, 2)
     }
-    return render_template('index.html', series=series, genres=genres, stats=stats)
+    return render_template(
+        'index.html',
+        series=series,
+        genres=genres,
+        stats=stats,
+        pagination=pagination
+    )
 
 
 # ---------- AJOUT ----------
