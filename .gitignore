@@ -5,4 +5,17 @@ __pycache__/
 instance/
 local.db
 *.db
+
+# Fichiers macOS
 .DS_Store
+
+# Archives locales
+_archives/
+
+# Fichiers de benchmark temporaires
+*.png
+benchmark*.csv
+benchmark*.py
+
+# Exceptions
+!data/sample.csv
