@@ -3,43 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BD4TVShow{% endblock %}</title>
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Style personnalisé -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📺</text></svg>">
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem;">
-        <a class="navbar-brand" href="/">BD4TVShow</a>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a class="btn btn-sm" href="/">Accueil</a>
-            <a class="btn btn-sm" href="/add">Ajouter</a>
-            <a class="btn btn-sm" href="/stats">Statistiques</a>
-            <a class="btn btn-sm" href="/export">Export CSV</a>
+    <div class="nav-container">
+        <a class="navbar-brand" href="/">
+            <span class="brand-icon">📺</span>
+            <span class="brand-text">{{ app_name }}</span>
+        </a>
+
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="/" class="nav-link">🏠 Accueil</a>
+            <a href="/add" class="nav-link">➕ Ajouter</a>
+            <a href="/stats" class="nav-link">📊 Statistiques</a>
+            <a href="/export" class="nav-link">📥 Export</a>
+            {% if current_user.is_authenticated %}
+                <span class="user-badge">
+                    <span class="user-dot"></span>
+                    {{ current_user.id }}
+                </span>
+                <a href="/logout" class="nav-link nav-link-danger">🚪 Déconnexion</a>
+            {% endif %}
         </div>
     </div>
 </nav>
 
-<!-- CONTENU -->
 <div class="container">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}
-        <div class="alert alert-{{ cat }}">
-            <strong>{{ '✅' if cat == 'success' else '⚠️' }}</strong>
+        <div class="alert alert-{{ cat }} fade-in">
+            <strong>{{ '✅' if cat == 'success' else '⚠️' if cat == 'warning' else '❌' }}</strong>
             {{ msg }}
         </div>
       {% endfor %}
@@ -49,10 +55,14 @@
 
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
-    <p>📺 BD4TVShow — Projet Big Data • Flask + PostgreSQL + Docker</p>
+    <p>
+        <strong>{{ app_name }}</strong> v{{ app_version }} — Projet Big Data
+        • Flask + PostgreSQL + Docker
+        • © {{ current_year }}
+    </p>
 </footer>
 
+<script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

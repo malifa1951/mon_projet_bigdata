@@ -1,71 +1,106 @@
 {% extends 'base.html' %}
 
-{% block title %}Accueil — BD4TVShow{% endblock %}
+{% block title %}Tableau de bord — {{ app_name }}{% endblock %}
 
 {% block content %}
 
-<h2>Liste des séries</h2>
+<div class="page-header">
+    <div>
+        <h2>🎬 Tableau de bord</h2>
+        <p class="subtitle">Gérez votre collection de séries TV</p>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card kpi-primary">
+        <div class="kpi-icon">📺</div>
+        <div class="kpi-content">
+            <span class="kpi-value" data-count="{{ stats.total_series }}">0</span>
+            <span class="kpi-label">Séries</span>
+        </div>
+    </div>
+    <div class="kpi-card kpi-secondary">
+        <div class="kpi-icon">🎭</div>
+        <div class="kpi-content">
+            <span class="kpi-value" data-count="{{ stats.total_genres }}">0</span>
+            <span class="kpi-label">Genres</span>
+        </div>
+    </div>
+    <div class="kpi-card kpi-success">
+        <div class="kpi-icon">⭐</div>
+        <div class="kpi-content">
+            <span class="kpi-value" data-count="{{ stats.avg_note }}" data-decimal="true">0</span>
+            <span class="kpi-label">Note moyenne</span>
+        </div>
+    </div>
+</div>
 
 <!-- Import CSV -->
 <div class="card">
-    <form action="/import" method="post" enctype="multipart/form-data">
-        <label>📥 Importer un fichier CSV</label>
-        <div class="input-group">
-            <input type="file" name="file" class="form-control" accept=".csv" required>
-            <button class="btn btn-primary" type="submit">Importer</button>
+    <form action="/import" method="post" enctype="multipart/form-data" class="import-form">
+        <div class="import-icon">📥</div>
+        <div class="import-text">
+            <strong>Importer un fichier CSV</strong>
+            <small>Format : titre, annee_debut, annee_fin, note, genre_id</small>
         </div>
+        <input type="file" name="file" id="fileInput" accept=".csv" required hidden onchange="updateFileName(this)">
+        <label for="fileInput" class="btn btn-secondary" id="fileLabel">Choisir un fichier</label>
+        <button class="btn btn-primary" type="submit">Importer</button>
     </form>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Rechercher une série, un genre..." onkeyup="filterTable()">
 </div>
 
 <!-- Tableau -->
 {% if series %}
-<table class="table">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Titre</th>
-            <th>Année début</th>
-            <th>Année fin</th>
-            <th>Note</th>
-            <th>Genre</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for s in series %}
-        <tr>
-            <td><strong>{{ s.id }}</strong></td>
-            <td>{{ s.titre }}</td>
-            <td>{{ s.annee_debut or '—' }}</td>
-            <td>{{ s.annee_fin or '—' }}</td>
-            <td>
-                {% if s.note %}
-                    <span style="background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
-                        ⭐ {{ s.note }}
-                    </span>
-                {% else %}
-                    —
-                {% endif %}
-            </td>
-            <td>
-                {% if s.genre %}
-                    <span style="background: rgba(99, 102, 241, 0.1); color: #4f46e5; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 500; font-size: 0.85rem;">
-                        {{ s.genre.nom }}
-                    </span>
-                {% else %}
-                    —
-                {% endif %}
-            </td>
-            <td>
-                <a href="/edit/{{ s.id }}" class="btn btn-sm btn-warning">Modifier</a>
-                <form action="/delete/{{ s.id }}" method="post" style="display:inline;">
-                    <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer « {{ s.titre }} » ?')">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="table-wrapper">
+    <table class="table" id="seriesTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)" class="sortable">#</th>
+                <th onclick="sortTable(1)" class="sortable">Titre</th>
+                <th onclick="sortTable(2)" class="sortable">Début</th>
+                <th onclick="sortTable(3)" class="sortable">Fin</th>
+                <th onclick="sortTable(4)" class="sortable">Note</th>
+                <th>Genre</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for s in series %}
+            <tr class="fade-in">
+                <td><strong>{{ s.id }}</strong></td>
+                <td class="titre-cell">{{ s.titre }}</td>
+                <td>{{ s.annee_debut or '—' }}</td>
+                <td>{{ s.annee_fin or '—' }}</td>
+                <td>
+                    {% if s.note %}
+                        <span class="badge badge-note">⭐ {{ s.note }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if s.genre %}
+                        <span class="badge badge-genre">{{ s.genre.nom }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td class="actions-cell">
+                    <a href="/edit/{{ s.id }}" class="btn btn-sm btn-warning">✏️ Modifier</a>
+                    <form action="/delete/{{ s.id }}" method="post" style="display:inline;">
+                        <button class="btn btn-sm btn-danger"
+                                onclick="return confirm('Supprimer « {{ s.titre }} » ?')">🗑️ Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="no-results" id="noResults" style="display:none;">Aucune série ne correspond à votre recherche.</p>
+</div>
 {% else %}
 <div class="card empty-state">
     <h3>Aucune série pour le moment</h3>

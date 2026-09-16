@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Statistiques — BD4TVShow{% endblock %}
+{% block title %}Statistiques — {{ app_name }}{% endblock %}
 
 {% block content %}
 
 <h2>📊 Statistiques</h2>
 
 <div class="timing-badge">
-    ⚡ Temps d'exécution : {{ duree }} ms
+    ⚡ Temps d'exécution : <strong>{{ duree }} ms</strong>
 </div>
 
 <div class="card">
@@ -17,33 +17,25 @@
         {% for titre, note in top_series %}
             <li class="list-group-item">
                 <strong>{{ titre }}</strong>
-                <span style="margin-left: auto; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">
-                    ⭐ {{ note }}
-                </span>
+                <span class="badge badge-note">⭐ {{ note }}</span>
             </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p style="color: var(--text-muted);">Aucune donnée disponible.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">Aucune donnée.</p>{% endif %}
 </div>
 
 <div class="card">
-    <h4>🎭 Nombre de séries par genre</h4>
+    <h4>🎭 Séries par genre</h4>
     {% if par_genre %}
     <ul class="list-group">
         {% for genre, count in par_genre %}
             <li class="list-group-item">
                 {{ genre }}
-                <span style="margin-left: auto; background: rgba(99, 102, 241, 0.1); color: #4f46e5; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">
-                    {{ count }} série{{ 's' if count > 1 else '' }}
-                </span>
+                <span class="badge badge-genre">{{ count }} série{{ 's' if count > 1 else '' }}</span>
             </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p style="color: var(--text-muted);">Aucune donnée disponible.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">Aucune donnée.</p>{% endif %}
 </div>
 
 <div class="card">
@@ -53,15 +45,11 @@
         {% for titre, count in longues %}
             <li class="list-group-item">
                 <strong>{{ titre }}</strong>
-                <span style="margin-left: auto; background: rgba(16, 185, 129, 0.1); color: #059669; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">
-                    {{ count }} saisons
-                </span>
+                <span class="badge badge-success">{{ count }} saisons</span>
             </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p style="color: var(--text-muted);">Aucune série ne dépasse 3 saisons.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">Aucune série ne dépasse 3 saisons.</p>{% endif %}
 </div>
 
 <div class="card">
@@ -71,16 +59,14 @@
         {% for nom, prenom, personnage, titre in roles %}
             <li class="list-group-item">
                 <strong>{{ prenom }} {{ nom }}</strong>
-                <span style="color: var(--text-muted);">incarne</span>
+                <span class="text-muted">incarne</span>
                 <em>{{ personnage }}</em>
-                <span style="color: var(--text-muted); margin-left: auto;">dans</span>
+                <span class="text-muted" style="margin-left:auto;">dans</span>
                 <strong>{{ titre }}</strong>
             </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p style="color: var(--text-muted);">Aucune donnée disponible.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">Aucune donnée.</p>{% endif %}
 </div>
 
 {% endblock %}

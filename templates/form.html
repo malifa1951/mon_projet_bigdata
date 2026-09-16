@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ 'Modifier' if serie else 'Ajouter' }} — BD4TVShow{% endblock %}
+{% block title %}{{ 'Modifier' if serie else 'Ajouter' }} — {{ app_name }}{% endblock %}
 
 {% block content %}
 
 <h2>{{ '✏️ Modifier' if serie else '➕ Ajouter' }} une série</h2>
 
-<div class="card" style="max-width: 640px; margin: 0 auto;">
+<div class="card form-card">
     <form method="post">
 
         <div class="mb-3">
             <label>Titre *</label>
             <input type="text" name="titre" class="form-control"
                    value="{{ serie.titre if serie else '' }}"
-                   placeholder="Ex : Breaking Bad" required>
+                   placeholder="Ex : Breaking Bad" required autofocus>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-row">
             <div class="mb-3">
                 <label>Année début</label>
                 <input type="number" name="annee_debut" class="form-control"
@@ -31,9 +31,9 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-row">
             <div class="mb-3">
-                <label>Note (0-10)</label>
+                <label>Note (0 - 10)</label>
                 <input type="number" step="0.1" name="note" class="form-control"
                        value="{{ serie.note if serie else '' }}"
                        placeholder="9.5" min="0" max="10">
@@ -51,7 +51,7 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <div class="form-actions">
             <button class="btn btn-success" type="submit">
                 {{ '💾 Enregistrer' if serie else '➕ Ajouter' }}
             </button>

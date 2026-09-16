@@ -1,7 +1,8 @@
 import csv
 import io
 import time
-from flask import Flask, render_template, request, redirect, url_for, Response, flash
+from flask import Flask, render_template, request, redirect, url_for, Response, flash, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from config import Config
 from models import db, Genre, Serie, Saison, Acteur, Role
 
@@ -9,67 +10,141 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
+# ---------- AUTHENTIFICATION ----------
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = "Veuillez vous connecter pour accéder à cette page."
+login_manager.login_message_category = "warning"
+
+
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
+
+
+# ---------- CONTEXTE GLOBAL (pour les templates) ----------
+@app.context_processor
+def inject_globals():
+    return {
+        'app_name': 'malifa_big_data',
+        'app_version': '1.0',
+        'current_year': time.strftime('%Y')
+    }
+
+
+# ---------- LOGIN ----------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        if username == app.config['ADMIN_USERNAME'] and password == app.config['ADMIN_PASSWORD']:
+            login_user(User(username))
+            flash(f'Bienvenue {username} 👋', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Identifiants incorrects. Essayez à nouveau.', 'danger')
+
+    return render_template('login.html')
+
+
+# ---------- LOGOUT ----------
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Vous avez été déconnecté.', 'success')
+    return redirect(url_for('login'))
+
 
 # ---------- PAGE D'ACCUEIL ----------
 @app.route('/')
+@login_required
 def index():
     series = Serie.query.order_by(Serie.titre).all()
-    return render_template('index.html', series=series)
+    genres = Genre.query.all()
+    stats = {
+        'total_series': Serie.query.count(),
+        'total_genres': Genre.query.count(),
+        'avg_note': round(db.session.query(db.func.avg(Serie.note)).scalar() or 0, 2)
+    }
+    return render_template('index.html', series=series, genres=genres, stats=stats)
 
 
 # ---------- AJOUT ----------
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add():
     if request.method == 'POST':
-        titre = request.form['titre']
-        annee_debut = request.form.get('annee_debut') or None
-        annee_fin = request.form.get('annee_fin') or None
-        note = request.form.get('note') or None
-        genre_id = request.form.get('genre_id') or None
-        serie = Serie(
-            titre=titre,
-            annee_debut=annee_debut,
-            annee_fin=annee_fin,
-            note=note,
-            genre_id=genre_id
-        )
-        db.session.add(serie)
-        db.session.commit()
-        flash('Série ajoutée avec succès !', 'success')
-        return redirect(url_for('index'))
+        try:
+            serie = Serie(
+                titre=request.form['titre'],
+                annee_debut=request.form.get('annee_debut') or None,
+                annee_fin=request.form.get('annee_fin') or None,
+                note=request.form.get('note') or None,
+                genre_id=request.form.get('genre_id') or None
+            )
+            db.session.add(serie)
+            db.session.commit()
+            flash(f'Série « {serie.titre} » ajoutée avec succès !', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur : {str(e)}', 'danger')
+
     genres = Genre.query.all()
     return render_template('form.html', serie=None, genres=genres)
 
 
 # ---------- MODIFICATION ----------
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit(id):
     serie = Serie.query.get_or_404(id)
     if request.method == 'POST':
-        serie.titre = request.form['titre']
-        serie.annee_debut = request.form.get('annee_debut') or None
-        serie.annee_fin = request.form.get('annee_fin') or None
-        serie.note = request.form.get('note') or None
-        serie.genre_id = request.form.get('genre_id') or None
-        db.session.commit()
-        flash('Série modifiée !', 'success')
-        return redirect(url_for('index'))
+        try:
+            serie.titre = request.form['titre']
+            serie.annee_debut = request.form.get('annee_debut') or None
+            serie.annee_fin = request.form.get('annee_fin') or None
+            serie.note = request.form.get('note') or None
+            serie.genre_id = request.form.get('genre_id') or None
+            db.session.commit()
+            flash(f'Série « {serie.titre} » modifiée !', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur : {str(e)}', 'danger')
+
     genres = Genre.query.all()
     return render_template('form.html', serie=serie, genres=genres)
 
 
 # ---------- SUPPRESSION ----------
 @app.route('/delete/<int:id>', methods=['POST'])
+@login_required
 def delete(id):
     serie = Serie.query.get_or_404(id)
+    titre = serie.titre
     db.session.delete(serie)
     db.session.commit()
-    flash('Série supprimée !', 'success')
+    flash(f'Série « {titre} » supprimée.', 'success')
     return redirect(url_for('index'))
 
 
 # ---------- EXPORT CSV ----------
 @app.route('/export')
+@login_required
 def export_csv():
     series = Serie.query.all()
     output = io.StringIO()
@@ -80,58 +155,62 @@ def export_csv():
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment; filename=series.csv'}
+        headers={'Content-Disposition': 'attachment; filename=malifa_big_data_series.csv'}
     )
 
 
 # ---------- IMPORT CSV ----------
 @app.route('/import', methods=['POST'])
+@login_required
 def import_csv():
     file = request.files.get('file')
     if not file:
         flash('Aucun fichier sélectionné', 'danger')
         return redirect(url_for('index'))
-    stream = io.StringIO(file.stream.read().decode('UTF-8'))
-    reader = csv.DictReader(stream)
-    for row in reader:
-        serie = Serie(
-            titre=row['titre'],
-            annee_debut=row.get('annee_debut') or None,
-            annee_fin=row.get('annee_fin') or None,
-            note=row.get('note') or None,
-            genre_id=row.get('genre_id') or None
-        )
-        db.session.add(serie)
-    db.session.commit()
-    flash('Import CSV réussi !', 'success')
+    try:
+        stream = io.StringIO(file.stream.read().decode('UTF-8'))
+        reader = csv.DictReader(stream)
+        count = 0
+        for row in reader:
+            db.session.add(Serie(
+                titre=row['titre'],
+                annee_debut=row.get('annee_debut') or None,
+                annee_fin=row.get('annee_fin') or None,
+                note=row.get('note') or None,
+                genre_id=row.get('genre_id') or None
+            ))
+            count += 1
+        db.session.commit()
+        flash(f'{count} série(s) importée(s) avec succès !', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur d\'import : {str(e)}', 'danger')
     return redirect(url_for('index'))
 
 
-# ---------- REQUÊTES PRÉ-CODÉES ----------
+# ---------- STATISTIQUES ----------
 @app.route('/stats')
+@login_required
 def stats():
     start = time.time()
 
-    # Requête 1 : Top 5 séries les mieux notées
     top_series = db.session.query(Serie.titre, Serie.note) \
+        .filter(Serie.note.isnot(None)) \
         .order_by(Serie.note.desc()).limit(5).all()
 
-    # Requête 2 : Nombre de séries par genre
     par_genre = db.session.query(Genre.nom, db.func.count(Serie.id)) \
         .join(Serie, Serie.genre_id == Genre.id) \
         .group_by(Genre.nom).all()
 
-    # Requête 3 : Séries avec plus de 3 saisons
     longues = db.session.query(Serie.titre, db.func.count(Saison.id)) \
         .join(Saison).group_by(Serie.titre) \
         .having(db.func.count(Saison.id) > 3).all()
 
-    # Requête 4 : Acteurs et leurs personnages
     roles = db.session.query(Acteur.nom, Acteur.prenom, Role.nom_personnage, Serie.titre) \
         .join(Role, Role.acteur_id == Acteur.id) \
         .join(Serie, Role.serie_id == Serie.id).limit(10).all()
 
-    duree = round((time.time() - start) * 1000, 2)  # en ms
+    duree = round((time.time() - start) * 1000, 2)
 
     return render_template(
         'stats.html',
@@ -143,7 +222,7 @@ def stats():
     )
 
 
-# ---------- COMMANDE CLI : INITIALISATION ----------
+# ---------- COMMANDE CLI ----------
 @app.cli.command('init-db')
 def init_db():
     db.create_all()
