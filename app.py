@@ -32,7 +32,7 @@ def load_user(user_id):
 @app.context_processor
 def inject_globals():
     return {
-        'app_name': 'malifa_big_data',
+        'app_name': 'TVinsight',
         'app_version': '1.0',
         'current_year': time.strftime('%Y')
     }

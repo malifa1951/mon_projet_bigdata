@@ -1,5 +1,5 @@
 /* ============================================
-   malifa_big_data — Interactions JS
+   TVInsight — Interactions JS
    ============================================ */
 
 // ---------- MENU MOBILE ----------
